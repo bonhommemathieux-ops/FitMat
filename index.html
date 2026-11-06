@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f172a">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>FitMat</title>
+<style>
+:root {
+  --bg: #0f172a; --bg-2: #1e293b; --bg-3: #334155;
+  --border: #334155; --text: #f1f5f9; --muted: #94a3b8;
+  --primary: #f97316; --success: #22c55e; --danger: #ef4444; --info: #3b82f6;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; overscroll-behavior: none; }
+body { padding-bottom: calc(70px + env(safe-area-inset-bottom)); padding-top: env(safe-area-inset-top); }
+.page { display: none; padding: 16px; }
+.page.active { display: block; }
+
+header { background: var(--bg-2); padding: 20px 16px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+header h1 { margin: 0; font-size: 22px; font-weight: 700; color: var(--primary); }
+header .subtitle { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+
+.card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+.card h2 { margin: 0 0 12px; font-size: 16px; color: var(--primary); }
+.card h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.card p { font-size: 14px; line-height: 1.5; margin: 0 0 8px; color: var(--text); }
+.card ul { padding-left: 20px; margin: 0 0 8px; }
+.card li { font-size: 14px; line-height: 1.6; margin-bottom: 4px; }
+
+.exercise { display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--bg-3); border-radius: 10px; margin-bottom: 8px; }
+.exercise.done { opacity: 0.55; background: #1a2e1a; }
+.exercise-check { width: 28px; height: 28px; border: 2px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; cursor: pointer; background: var(--bg); }
+.exercise.done .exercise-check { background: var(--success); border-color: var(--success); color: white; }
+.exercise-name { font-size: 15px; font-weight: 500; }
+.exercise-sets { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.exercise-info { width: 28px; height: 28px; background: var(--info); color: white; border-radius: 50%; border: none; cursor: pointer; font-weight: 700; flex-shrink: 0; font-size: 15px; }
+.exercise-timer { background: var(--primary); color: white; padding: 6px 10px; border-radius: 8px; font-size: 13px; border: none; cursor: pointer; font-weight: 600; flex-shrink: 0; }
+
+.btn { display: block; width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+.btn-primary { background: var(--primary); color: white; }
+.btn-success { background: var(--success); color: white; }
+.btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+
+.stat-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
+.stat-row.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.stat { background: var(--bg-2); border: 1px solid var(--border); padding: 12px; border-radius: 10px; text-align: center; }
+.stat-value { font-size: 22px; font-weight: 700; color: var(--primary); }
+.stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+.input-row { margin-bottom: 12px; }
+.input-row label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.input-row input { width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 16px; }
+
+.week-day { display: flex; justify-content: space-between; align-items: center; padding: 14px; background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; cursor: pointer; }
+.week-day.today { border-color: var(--primary); background: #1a2238; }
+.week-day-name { font-size: 15px; font-weight: 600; }
+.week-day-type { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.week-day-badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+.badge-haut { background: #3b82f6; color: white; }
+.badge-bas { background: #a855f7; color: white; }
+.badge-cardio { background: #22c55e; color: white; }
+.badge-complet { background: #f97316; color: white; }
+.badge-libre { background: #64748b; color: white; }
+
+.history-item { background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 8px; }
+.history-date { font-size: 13px; color: var(--muted); }
+.history-type { font-size: 15px; font-weight: 600; margin-top: 2px; }
+
+.chart { background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-top: 12px; }
+.chart svg { width: 100%; height: 160px; }
+
+nav.tabs { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-2); border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(5, 1fr); padding-bottom: env(safe-area-inset-bottom); z-index: 100; }
+nav.tabs button { background: transparent; border: none; color: var(--muted); padding: 10px 2px; font-size: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+nav.tabs button .icon { font-size: 20px; }
+nav.tabs button.active { color: var(--primary); }
+
+.modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 200; padding: 16px; overflow-y: auto; }
+.modal.active { display: flex; }
+.modal-content { background: var(--bg-2); border: 1px solid var(--border); border-radius: 16px; padding: 20px; width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto; }
+.modal-content h2 { margin: 0 0 12px; color: var(--primary); font-size: 18px; text-align: center; }
+.timer-display { font-size: 54px; font-weight: 700; color: var(--primary); margin: 16px 0; font-variant-numeric: tabular-nums; text-align: center; }
+.modal-close { background: var(--danger); color: white; padding: 12px 24px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin-top: 12px; width: 100%; font-weight: 600; }
+
+.fiche-section { margin-bottom: 16px; }
+.fiche-section h3 { color: var(--primary); font-size: 13px; text-transform: uppercase; margin: 0 0 6px; letter-spacing: 0.5px; }
+.fiche-section p, .fiche-section li { font-size: 14px; line-height: 1.5; color: var(--text); margin: 0 0 6px; }
+.fiche-section ul { margin: 0; padding-left: 20px; }
+.fiche-section .label-ok { color: var(--success); font-weight: 600; }
+.fiche-section .label-ko { color: var(--danger); font-weight: 600; }
+.fiche-section .label-warn { color: #fbbf24; font-weight: 600; }
+
+.badge-secu { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-right: 4px; margin-bottom: 4px; }
+.badge-secu.cheville { background: #065f46; color: #a7f3d0; }
+.badge-secu.tension { background: #7c2d12; color: #fed7aa; }
+
+.detail-exercise { padding: 10px; background: var(--bg-3); border-radius: 8px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; gap: 8px; cursor: pointer; }
+.detail-exercise-name { font-weight: 600; font-size: 14px; }
+.detail-exercise-detail { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.detail-exercise-chevron { color: var(--info); font-size: 20px; font-weight: 700; }
+
+.progress-bar { height: 8px; background: var(--bg-3); border-radius: 4px; overflow: hidden; margin: 8px 0; }
+.progress-fill { height: 100%; background: var(--primary); transition: width 0.3s; }
+
+.alert { background: #422006; border: 1px solid #a16207; color: #fbbf24; padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom: 12px; line-height: 1.5; }
+.alert strong { color: #fcd34d; }
+.alert-info { background: #1e3a8a; border-color: #3b82f6; color: #bfdbfe; }
+.alert-info strong { color: #dbeafe; }
+.alert-danger { background: #7f1d1d; border-color: #dc2626; color: #fecaca; }
+.alert-danger strong { color: #fecaca; }
+
+.week-selector { display: flex; gap: 6px; margin-bottom: 12px; }
+.week-selector button { flex: 1; padding: 8px; background: var(--bg-2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 13px; }
+.week-selector button.active { background: var(--primary); border-color: var(--primary); }
+
+#error-banner { display: none; background: #7f1d1d; color: #fecaca; padding: 10px 16px; font-size: 12px; font-family: monospace; }
+
+.quick-start { background: linear-gradient(135deg, #f97316, #c2410c); color: white; padding: 16px; border-radius: 12px; margin-bottom: 12px; }
+.quick-start h2 { color: white; margin: 0 0 8px; font-size: 16px; }
+.quick-start p { font-size: 13px; line-height: 1.5; margin: 0 0 4px; }
+</style>
+</head>
+<body>
+
+<div id="error-banner"></div>
+
+<header>
+  <h1 id="h-title">FitMat</h1>
+  <p class="subtitle" id="h-subtitle">Charger ton profil</p>
+</header>
+
+<!-- AUJOURD'HUI -->
+<div id="page-today" class="page active">
+  <div class="quick-start" id="quick-start-box">
+    <h2>Comment ca marche ?</h2>
+    <p>Pour chaque exercice : clique sur le bouton bleu <strong>i</strong> pour voir comment le faire. Coche la case grise quand tu as fini la serie. Le bouton orange <strong>timer</strong> lance la minuterie de repos.</p>
+    <p style="margin-top:8px"><button class="btn-ghost" onclick="document.getElementById('quick-start-box').style.display='none'" style="background:rgba(255,255,255,0.2);color:white;border:none;padding:8px 12px;border-radius:6px;font-size:12px;cursor:pointer">Masquer</button></p>
+  </div>
+
+  <div class="day-selector" id="day-selector" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px">
+    <button data-day="1" style="padding:10px 2px;background:var(--bg-2);border:1px solid var(--border);color:var(--text);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600">Lun</button>
+    <button data-day="2" style="padding:10px 2px;background:var(--bg-2);border:1px solid var(--border);color:var(--text);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600">Mar</button>
+    <button data-day="3" style="padding:10px 2px;background:var(--bg-2);border:1px solid var(--border);color:var(--text);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600">Mer</button>
+    <button data-day="4" style="padding:10px 2px;background:var(--bg-2);border:1px solid var(--border);color:var(--text);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600">Jeu</button>
+    <button data-day="5" style="padding:10px 2px;background:var(--bg-2);border:1px solid var(--border);color:var(--text);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600">Ven</button>
+    <button data-day="6" style="padding:10px 2px;background:var(--bg-2);border:1px solid var(--border);color:var(--text);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600">Sam</button>
+    <button data-day="7" style="padding:10px 2px;background:var(--bg-2);border:1px solid var(--border);color:var(--text);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600">Dim</button>
+  </div>
+
+  <div class="week-selector-today" id="week-selector-today" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:12px">
+    <button data-week="1" style="padding:8px 2px;background:var(--bg-2);border:1px solid var(--border);color:var(--text);border-radius:6px;cursor:pointer;font-size:11px;font-weight:600">S1</button>
+    <button data-week="2" style="padding:8px 2px;background:var(--bg-2);border:1px solid var(--border);color:var(--text);border-radius:6px;cursor:pointer;font-size:11px;font-weight:600">S2</button>
+    <button data-week="3" style="padding:8px 2px;background:var(--bg-2);border:1px solid var(--border);color:var(--text);border-radius:6px;cursor:pointer;font-size:11px;font-weight:600">S3</button>
+    <button data-week="4" style="padding:8px 2px;background:var(--bg-2);border:1px solid var(--border);color:var(--text);border-radius:6px;cursor:pointer;font-size:11px;font-weight:600">S4</button>
+  </div>
+
+  <div class="card">
+    <h3 id="today-date">Chargement...</h3>
+    <h2 id="today-type">-</h2>
+    <div class="progress-bar"><div class="progress-fill" id="today-progress" style="width:0%"></div></div>
+    <p id="today-progress-text" style="font-size:12px;color:var(--muted);margin:0">0 / 0 exercices faits</p>
+  </div>
+  <div id="today-exercises"></div>
+  <button class="btn btn-success" id="btn-finish-session">Seance terminee</button>
+  <button class="btn btn-ghost" id="btn-reset-session">Reinitialiser la seance</button>
+</div>
+
+<!-- PROGRAMME -->
+<div id="page-program" class="page">
+  <div class="card">
+    <h2>Semaine en cours</h2>
+    <div class="week-selector">
+      <button data-week="1">S1</button>
+      <button data-week="2">S2</button>
+      <button data-week="3">S3</button>
+      <button data-week="4">S4</button>
+    </div>
+    <p id="week-info" style="font-size:12px;color:var(--muted);margin:0">-</p>
+  </div>
+  <p style="font-size:12px;color:var(--muted);margin:0 0 8px;padding:0 4px">Touche un jour pour voir le detail. Touche un exercice pour la fiche technique complete.</p>
+  <div id="program-days"></div>
+</div>
+
+<!-- SUIVI -->
+<div id="page-track" class="page">
+  <div class="card">
+    <h2>Mesures du jour</h2>
+    <p style="font-size:12px;color:var(--muted);margin:0 0 12px">A faire 1 fois par semaine, le dimanche matin a jeun, meme heure.</p>
+    <div class="input-row">
+      <label>Poids (kg)</label>
+      <input type="number" id="input-weight" step="0.1" placeholder="105.0" inputmode="decimal">
+    </div>
+    <div class="input-row">
+      <label>Tour de taille (cm) - au nombril</label>
+      <input type="number" id="input-waist" step="0.5" placeholder="110" inputmode="decimal">
+    </div>
+    <button class="btn btn-primary" id="btn-save-measure">Enregistrer</button>
+  </div>
+  <div class="stat-row">
+    <div class="stat"><div class="stat-value" id="stat-weight">-</div><div class="stat-label">Poids actuel</div></div>
+    <div class="stat"><div class="stat-value" id="stat-loss">-</div><div class="stat-label">Perdu</div></div>
+  </div>
+  <div class="stat-row cols-3">
+    <div class="stat"><div class="stat-value" id="stat-imc">-</div><div class="stat-label">IMC</div></div>
+    <div class="stat"><div class="stat-value" id="stat-waist">-</div><div class="stat-label">Taille</div></div>
+    <div class="stat"><div class="stat-value" id="stat-sessions">0</div><div class="stat-label">Seances</div></div>
+  </div>
+  <div class="card">
+    <h3>Evolution poids</h3>
+    <div class="chart"><svg id="chart-weight" viewBox="0 0 400 160" preserveAspectRatio="none"></svg></div>
+    <p style="font-size:11px;color:var(--muted);text-align:center;margin:8px 0 0" id="chart-info">-</p>
+  </div>
+  <div class="alert"><strong>Objectif 6 mois :</strong> 83-87 kg (IMC 25) - Perte -1 kg/sem maximum. Au-dela, tu perds du muscle en plus de la graisse.</div>
+</div>
+
+<!-- HISTORIQUE -->
+<div id="page-history" class="page">
+  <div class="stat-row cols-3">
+    <div class="stat"><div class="stat-value" id="hist-total">0</div><div class="stat-label">Total</div></div>
+    <div class="stat"><div class="stat-value" id="hist-week">0</div><div class="stat-label">Semaine</div></div>
+    <div class="stat"><div class="stat-value" id="hist-streak">0</div><div class="stat-label">Serie</div></div>
+  </div>
+  <div id="history-list"></div>
+</div>
+
+<!-- INFOS -->
+<div id="page-info" class="page">
+  <div class="card">
+    <h2>Comment utiliser l'appli</h2>
+    <ol>
+      <li><strong>Onglet Aujourd'hui</strong> : l'appli detecte automatiquement le jour. Elle affiche ta seance et les exercices a faire.</li>
+      <li><strong>Bouton i (bleu)</strong> sur chaque exercice : fiche technique complete (position, mouvement, erreurs, securite).</li>
+      <li><strong>Case a cocher</strong> : coche quand la serie est finie.</li>
+      <li><strong>Bouton timer orange</strong> : minuterie de repos (bip + vibration a la fin).</li>
+      <li><strong>Bouton Seance terminee</strong> : valide la seance et l'ajoute a l'historique.</li>
+      <li><strong>Onglet Programme</strong> : vue complete de la semaine + progression S1 a S4.</li>
+      <li><strong>Onglet Suivi</strong> : saisie poids + tour de taille + graphique evolution.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>Regles de securite</h2>
+    <div class="alert-danger alert">
+      <strong>⚠ Arthrodese cheville gauche</strong><br>
+      Zero amortissement cote gauche. Chaque impact remonte dans le tibia et le genou.<br>
+      <strong>Interdit :</strong> course a pied, sauts, burpees, jumping jacks, sentiers caillouteux.
+    </div>
+    <div class="alert-danger alert">
+      <strong>⚠ Tension sous traitement (13/9)</strong><br>
+      Evite les isometriques longs (gainage > 45s au debut). Respire activement : <strong>EXPIRE en poussant</strong>, inspire en descendant. Jamais en apnee = pic de tension immediat.
+    </div>
+    <div class="alert">
+      <strong>Signaux d'alerte - STOP et consulte si :</strong>
+      <ul style="margin:6px 0 0;padding-left:20px">
+        <li>Tension qui remonte > 15/10 pendant une semaine</li>
+        <li>Douleur articulaire persistante (genou, dos, epaule)</li>
+        <li>Fatigue extreme apres 2-3 semaines</li>
+        <li>Perte de poids > 2 kg/semaine (trop rapide)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Alimentation - les regles simples</h2>
+    <p><strong>Petit-dej :</strong> flocons avoine + fromage blanc 0% + 1 fruit + 1 oeuf. Pas de viennoiserie.</p>
+    <p><strong>Collation matin (chantier) :</strong> 1 fruit + 20g amandes.</p>
+    <p><strong>Dejeuner :</strong> assiette = 1/2 legumes + 1/4 proteine + 1/4 feculents.</p>
+    <p><strong>Collation 16h :</strong> 1 fruit + yaourt nature.</p>
+    <p><strong>Diner :</strong> soupe + proteine (poisson/oeufs/poulet) + salade. <strong>PAS de feculent le soir.</strong></p>
+    <p><strong>Eau :</strong> 2 litres par jour minimum.</p>
+    <p><strong>Interdits temporaires :</strong> sodas, jus de fruits industriels, viennoiseries, chips, apero sucres.</p>
+    <p style="color:var(--success);font-weight:600">✓ Zero alcool deja en place - c'est un enorme avantage pour toi.</p>
+  </div>
+
+  <div class="card">
+    <h2>Progression - objectif 6 mois</h2>
+    <ul>
+      <li><strong>Mois 1 :</strong> -4 a -5 kg - arriver autour de 100 kg</li>
+      <li><strong>Mois 3 :</strong> -10 a -12 kg - arriver autour de 93-95 kg</li>
+      <li><strong>Mois 6 :</strong> -18 a -22 kg - arriver autour de 83-87 kg (IMC 25)</li>
+      <li><strong>Semaine 5, 11, 17 :</strong> semaine de DECHARGE (volume divise par 2) pour laisser le corps consolider les gains</li>
+    </ul>
+    <p style="font-size:13px;color:var(--muted);margin-top:8px">La perte de poids regulier est plus importante que la vitesse. Ne te compare pas aux autres.</p>
+  </div>
+
+  <div class="card">
+    <h2>Mon profil</h2>
+    <p>Modifie ton profil (age, taille, poids objectif, pathologies).</p>
+    <button class="btn btn-primary" onclick="openProfileModal(false)" style="margin-top:8px">Modifier mon profil</button>
+  </div>
+
+  <div class="card">
+    <h2>A propos</h2>
+    <p>FitMat - PWA sport personnelle. Tes donnees restent sur ton telephone, rien n'est envoye en ligne.</p>
+    <p><strong>Installation iPhone :</strong> Safari > Partager > Sur l'ecran d'accueil.</p>
+    <p><strong>Reset total :</strong> <button class="btn-ghost" onclick="if(confirm('Effacer toutes les donnees ?')){localStorage.clear();location.reload();}" style="background:var(--danger);color:white;border:none;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer">Effacer toutes les donnees</button></p>
+  </div>
+</div>
+
+<!-- MODAL TIMER -->
+<div class="modal" id="modal-timer">
+  <div class="modal-content">
+    <h2 id="timer-title">Recuperation</h2>
+    <div class="timer-display" id="timer-display">90</div>
+    <button class="modal-close" id="btn-timer-stop">Stop</button>
+  </div>
+</div>
+
+<!-- MODAL DETAIL JOUR -->
+<div class="modal" id="modal-detail">
+  <div class="modal-content" style="text-align:left">
+    <h2 id="detail-title">-</h2>
+    <div id="detail-content"></div>
+    <button class="modal-close" id="btn-detail-close">Fermer</button>
+  </div>
+</div>
+
+<!-- MODAL ONBOARDING / PROFIL -->
+<div class="modal" id="modal-profile">
+  <div class="modal-content" style="text-align:left;max-width:420px">
+    <h2 id="profile-title">Mon profil</h2>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 14px">Tes donnees restent uniquement sur ton telephone, rien n'est envoye en ligne.</p>
+
+    <div class="input-row">
+      <label>Prenom (optionnel)</label>
+      <input type="text" id="p-name" placeholder="Mathieu" autocomplete="off">
+    </div>
+    <div class="input-row">
+      <label>Age</label>
+      <input type="number" id="p-age" placeholder="47" inputmode="numeric">
+    </div>
+    <div class="input-row">
+      <label>Taille (cm)</label>
+      <input type="number" id="p-height" placeholder="185" inputmode="numeric">
+    </div>
+    <div class="input-row">
+      <label>Poids actuel (kg)</label>
+      <input type="number" id="p-weight" step="0.1" placeholder="105" inputmode="decimal">
+    </div>
+    <div class="input-row">
+      <label>Poids objectif (kg) - vise IMC 25 environ</label>
+      <input type="number" id="p-target" step="0.1" placeholder="85" inputmode="decimal">
+    </div>
+
+    <h3 style="color:var(--primary);font-size:13px;margin:16px 0 8px;text-transform:uppercase">Pathologies / specificites</h3>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
+        <input type="checkbox" id="p-tension" style="width:18px;height:18px"> Tension sous traitement
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
+        <input type="checkbox" id="p-arthrodese" style="width:18px;height:18px"> Arthrodese cheville
+      </label>
+      <div id="p-arthrodese-side-wrap" style="display:none;padding-left:26px">
+        <label style="font-size:13px;color:var(--muted)">Cote</label>
+        <select id="p-arthrodese-side" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:14px">
+          <option value="gauche">Gauche</option>
+          <option value="droite">Droite</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="btn-profile-save" style="margin-top:16px">Enregistrer</button>
+    <button class="btn btn-ghost" id="btn-profile-cancel" style="margin-top:4px;display:none">Annuler</button>
+  </div>
+</div>
+
+<!-- MODAL FICHE EXERCICE -->
+<div class="modal" id="modal-fiche">
+  <div class="modal-content" style="text-align:left">
+    <h2 id="fiche-title">-</h2>
+    <div id="fiche-content"></div>
+    <button class="modal-close" id="btn-fiche-close">Fermer</button>
+  </div>
+</div>
+
+<nav class="tabs">
+  <button data-tab="today" class="active"><span class="icon">&#128170;</span>Aujourd'hui</button>
+  <button data-tab="program"><span class="icon">&#128197;</span>Programme</button>
+  <button data-tab="track"><span class="icon">&#128202;</span>Suivi</button>
+  <button data-tab="history"><span class="icon">&#128214;</span>Historique</button>
+  <button data-tab="info"><span class="icon">&#8505;</span>Infos</button>
+</nav>
+
+<script>
+// Nettoyage agressif cache + service worker (necessaire pour effacer ancienne version)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function(regs) {
+    regs.forEach(function(r) { r.unregister(); });
+  }).catch(function(){});
+}
+if ('caches' in window) {
+  caches.keys().then(function(names) {
+    names.forEach(function(n) { caches.delete(n); });
+  }).catch(function(){});
+}
+
+// ============================================================
+// Tabs - PRIORITAIRE en 1er
+// ============================================================
+(function attachTabs() {
+  var btns = document.querySelectorAll('nav.tabs button');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener('click', function(e) {
+      var tab = e.currentTarget.dataset.tab;
+      var allBtns = document.querySelectorAll('nav.tabs button');
+      for (var j = 0; j < allBtns.length; j++) allBtns[j].classList.remove('active');
+      var pages = document.querySelectorAll('.page');
+      for (var k = 0; k < pages.length; k++) pages[k].classList.remove('active');
+      e.currentTarget.classList.add('active');
+      var page = document.getElementById('page-' + tab);
+      if (page) page.classList.add('active');
+      try {
+        if (tab === 'program') renderProgram();
+        if (tab === 'track') renderStats();
+        if (tab === 'history') renderHistory();
+      } catch(err) { showError(err); }
+    });
+  }
+})();
+
+function showError(err) {
+  var el = document.getElementById('error-banner');
+  el.textContent = 'ERR: ' + (err && err.message ? err.message : err);
+  el.style.display = 'block';
+  console.error(err);
+}
+
+// ============================================================
+// Base de donnees exercices avec fiches completes
+// ============================================================
+var GIF_BASE = 'https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@v1.1.0/';
+var IMG_BASE = 'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/';
+
+var EX = {
+  pompes_inclinees: {
+    gif: GIF_BASE + 'pectorals/incline-push-up.gif',
+    name: 'Pompes inclinees',
+    muscles: 'Pectoraux, epaules, triceps, gainage',
+    position: 'Mains sur un plan sureleve (table, plan de travail, canape) a largeur d\'epaules. Jambes tendues derriere. Corps droit comme une planche de la tete aux talons.',
+    mouvement: 'Descends la poitrine vers le plan en pliant les coudes a 45 degres du corps. Puis pousse pour remonter.',
+    respiration: 'INSPIRE en descendant - EXPIRE en poussant pour remonter.',
+    erreurs: ['Cambrer le dos (lombaires creusees)', 'Coudes trop ecartes (= douleur epaules)', 'Fesses en l\'air (pas gaine)', 'Tete qui tombe'],
+    conseil: 'Plus le plan est haut, plus c\'est facile. Commence sur un plan de travail (90 cm). Quand c\'est trop facile, descends sur une chaise, puis sur un banc, puis au sol.',
+    secu: 'cheville',
+    pourquoi: 'Exercice de base pour reconstruire force bras + poitrine + gainage simultanement. Zero impact cheville.'
+  },
+  tractions_australiennes: {
+    anim: [IMG_BASE + 'Inverted_Row/0.jpg', IMG_BASE + 'Inverted_Row/1.jpg'],
+    name: 'Tractions australiennes',
+    muscles: 'Dos (dorsaux), biceps, trapezes, gainage',
+    position: 'Allonge-toi sous une barre basse (barre entre 2 chaises solides, ou barre fixee a 1 m du sol). Attrape la barre en prise large (paumes vers toi ou vers l\'exterieur). Pieds au sol, genoux legerement flechis. Corps gaine.',
+    mouvement: 'Tire ta poitrine vers la barre en rapprochant les omoplates. Descends lentement en controle.',
+    respiration: 'EXPIRE en tirant vers la barre - INSPIRE en redescendant.',
+    erreurs: ['Dos cambre', 'Hanches qui montent avant le haut du corps', 'Mouvement avec la force des biceps seule (le dos doit faire le travail)'],
+    conseil: 'Pas de barre dispo ? Utilise une table solide avec une serviette dessous pour les mains. Plus tu es horizontal, plus c\'est dur. Debute avec le corps plus vertical.',
+    secu: 'cheville',
+    pourquoi: 'Prepare les tractions strictes. Travaille tout le dos qui est souvent faible chez les gens assis.'
+  },
+  dips: {
+    gif: GIF_BASE + 'pectorals/chest-dip.gif',
+    name: 'Dips entre 2 chaises',
+    muscles: 'Triceps, pectoraux bas, epaules',
+    position: 'Place 2 chaises solides face a face a largeur d\'epaules. Mets les mains sur les assises, bras tendus. Jambes tendues ou pliees devant toi, pieds au sol.',
+    mouvement: 'Descends en pliant les coudes derriere toi jusqu\'a ce qu\'ils fassent 90 degres. Puis pousse pour remonter.',
+    respiration: 'INSPIRE en descendant - EXPIRE en poussant pour remonter.',
+    erreurs: ['Descendre trop bas (= epaules fragilisees)', 'Coudes qui s\'ecartent sur les cotes', 'Epaules qui montent vers les oreilles'],
+    conseil: 'Si trop dur, mets les pieds plus pres de toi (genoux plies). Si trop facile, eloigne les pieds.',
+    secu: 'cheville',
+    pourquoi: 'Developpement rapide des triceps - muscle qui donne le "bras tendu" visible.'
+  },
+  rowing_bouteilles: {
+    gif: GIF_BASE + 'upper-back/dumbbell-bent-over-row.gif',
+    name: 'Rowing avec bouteilles',
+    muscles: 'Dos (rhomboides, trapezes), biceps',
+    position: 'Debout, penche en avant a 45 degres (dos plat, pas arrondi). Une bouteille d\'eau 5L dans chaque main, bras tendus vers le sol.',
+    mouvement: 'Tire les bouteilles vers tes cotes en serrant les omoplates. Les coudes passent le long du corps. Descends en controle.',
+    respiration: 'EXPIRE en tirant - INSPIRE en redescendant.',
+    erreurs: ['Dos rond (danger lombaires)', 'Elever les epaules', 'Tirer avec les biceps seulement'],
+    conseil: 'Si pas de bouteilles 5L, utilise 2 sacs lourds (livres, outils). Important : garder le dos PLAT.',
+    secu: 'cheville tension',
+    pourquoi: 'Corrige la posture voutee des chefs de chantier (bureau + telephone). Essentiel pour eviter les douleurs dorsales.'
+  },
+  gainage_planche: {
+    gif: GIF_BASE + 'abs/weighted-front-plank.gif',
+    name: 'Gainage planche',
+    muscles: 'Abdominaux profonds, gainage lombaire, epaules',
+    position: 'Allonge-toi sur le ventre. Monte sur les avant-bras (coudes sous les epaules) et sur la pointe des pieds. Corps droit : tete, dos, fesses, jambes alignes.',
+    mouvement: 'Tenir la position le temps indique. Ne pas bouger.',
+    respiration: 'Respire LENTEMENT par le nez. Ne bloque pas - danger tension.',
+    erreurs: ['Fesses en l\'air (pas gaine)', 'Fesses qui tombent (lombaires creusees)', 'Tete relevee (tension cervicales)', 'Apnee respiratoire'],
+    conseil: 'Au debut 20-30s suffit. Augmente de 5s par semaine. Ne vise pas des minutes - danger tension.',
+    secu: 'tension',
+    pourquoi: 'Protege le bas du dos pour tous les autres exercices. Priorite absolue a ton age.'
+  },
+  superman: {
+    anim: [IMG_BASE + 'Superman/0.jpg', IMG_BASE + 'Superman/1.jpg'],
+    name: 'Superman au sol',
+    muscles: 'Lombaires, fessiers, dos',
+    position: 'Allonge-toi sur le ventre, bras tendus devant toi, jambes tendues.',
+    mouvement: 'Souleve simultanement les bras + les jambes du sol en contractant le dos. Tiens 2 secondes en haut, redescends en controle.',
+    respiration: 'EXPIRE en montant - INSPIRE en descendant.',
+    erreurs: ['Trop haut (compression lombaires)', 'Mouvement trop rapide'],
+    conseil: 'Mouvement petit mais controle. Mieux 10 bonnes repetitions que 20 bacles.',
+    secu: 'cheville tension',
+    pourquoi: 'Renforce les lombaires - zone fragile apres 45 ans et chantier.'
+  },
+  squats_mur: {
+    anim: [IMG_BASE + 'Bodyweight_Squat/0.jpg', IMG_BASE + 'Bodyweight_Squat/1.jpg'],
+    name: 'Squats contre mur',
+    muscles: 'Quadriceps, fessiers, gainage',
+    position: 'Dos contre un mur. Pieds a largeur d\'epaules, legerement en avant du mur.',
+    mouvement: 'Descends en glissant le dos contre le mur jusqu\'a ce que les cuisses soient paralleles au sol (angle genou 90 degres). Puis remonte.',
+    respiration: 'INSPIRE en descendant - EXPIRE en poussant pour remonter.',
+    erreurs: ['Descendre trop bas (danger genoux)', 'Genoux qui partent en dedans', 'Talons qui se levent'],
+    conseil: 'Pour TOI avec arthrodese : NE DESCENDS PAS en dessous de 90 degres. Pieds BIEN A PLAT pour repartir la charge.',
+    secu: 'cheville',
+    pourquoi: 'Travaille les cuisses sans charge sur la cheville. Dos protege par le mur.'
+  },
+  fentes_avant: {
+    anim: [IMG_BASE + 'Dumbbell_Lunges/0.jpg', IMG_BASE + 'Dumbbell_Lunges/1.jpg'],
+    name: 'Fentes avant alternees',
+    muscles: 'Quadriceps, fessiers, gainage',
+    position: 'Debout, pieds largeur hanches.',
+    mouvement: 'Avance un pied d\'un grand pas. Descends le genou arriere vers le sol en pliant les 2 genoux a 90 degres. Pousse sur le talon avant pour revenir. Alterne les jambes.',
+    respiration: 'INSPIRE en descendant - EXPIRE en remontant.',
+    erreurs: ['Genou avant qui depasse la pointe du pied', 'Deseiquilibre (penche en avant)', 'Pas assez grand = genou avant trop plie'],
+    conseil: 'IMPORTANT ARTHRODESE : la fente gauche sera plus difficile. Si douleur, raccourcis le pas ou saute l\'exercice cette seance.',
+    secu: 'cheville',
+    pourquoi: 'Renforcement asymetrique = equilibre les 2 jambes. Prepare la marche et les escaliers.'
+  },
+  pont_fessier: {
+    gif: GIF_BASE + 'glutes/glute-bridge-march.gif',
+    name: 'Pont fessier au sol',
+    muscles: 'Fessiers, lombaires, ischios',
+    position: 'Allonge-toi sur le dos. Pieds a plat au sol, genoux plies. Bras le long du corps.',
+    mouvement: 'Pousse les hanches vers le plafond en serrant les fesses. Monte jusqu\'a ce que corps forme une ligne droite epaules-genoux. Descends lentement.',
+    respiration: 'EXPIRE en montant - INSPIRE en descendant.',
+    erreurs: ['Monter trop haut (lombaires creusees)', 'Ne pas contracter les fesses', 'Pieds trop loin ou trop pres'],
+    conseil: 'Exercice parfait pour toi : zero impact cheville + renforce les fessiers qui compensent la jambe gauche.',
+    secu: 'cheville tension',
+    pourquoi: 'Tes fessiers sont ta seule reserve de force pour compenser l\'arthrodese. Essentiel.'
+  },
+  chaise_mur: {
+    name: 'Chaise au mur isometrique',
+    muscles: 'Quadriceps, gainage, fessiers',
+    position: 'Dos contre un mur. Descends en squat jusqu\'a cuisses paralleles au sol. Reste dans cette position.',
+    mouvement: 'Tenir sans bouger le temps indique.',
+    respiration: 'Respire activement, ne bloque jamais.',
+    erreurs: ['Apnee', 'Descendre plus bas = danger genoux', 'Ne pas tenir assez longtemps'],
+    conseil: 'Attention tension : ne depasse pas 45s au debut. Augmente par palier de 5s.',
+    secu: 'cheville tension',
+    pourquoi: 'Force isometrique utile en vie reelle (porter charge, tenir position).'
+  },
+  mollet_gauche: {
+    gif: GIF_BASE + 'calves/bodyweight-standing-calf-raise.gif',
+    name: 'Elevations mollet G (seul)',
+    muscles: 'Mollet gauche (gastrocnemien, soleaire)',
+    position: 'Debout, main sur un mur pour l\'equilibre. Jambe droite levee. Jambe gauche seule au sol.',
+    mouvement: 'Monte sur la pointe du pied gauche. Tiens 1 seconde en haut. Descends lentement.',
+    respiration: 'EXPIRE en montant - INSPIRE en descendant.',
+    erreurs: ['Prendre appui sur la jambe droite', 'Mouvement rapide'],
+    conseil: 'TRES IMPORTANT POUR TOI. Le mollet gauche doit compenser le manque d\'amortissement de la cheville arthrodesee. Ne saute JAMAIS cet exercice.',
+    secu: 'cheville',
+    pourquoi: 'Protege ton genou et ton tibia gauches a long terme. Priorite absolue.'
+  },
+  coquille_g: {
+    gif: GIF_BASE + 'abductors/side-hip-abduction.gif',
+    name: 'Coquille fessier G',
+    muscles: 'Fessier moyen gauche',
+    position: 'Allonge-toi sur le cote droit. Jambes empilees, genoux plies a 90 degres. Pieds l\'un sur l\'autre.',
+    mouvement: 'Ouvre le genou gauche vers le plafond en gardant les pieds colles. Redescends lentement.',
+    respiration: 'EXPIRE en ouvrant - INSPIRE en fermant.',
+    erreurs: ['Decoller le bassin', 'Mouvement trop grand'],
+    conseil: 'Mouvement court mais precis. Tu dois sentir le fessier moyen bruler apres 10-12 repetitions.',
+    secu: 'cheville tension',
+    pourquoi: 'Stabilise la hanche gauche = evite la bascule qui fragilise le genou cote arthrodese.'
+  },
+  ext_genou_g: {
+    gif: GIF_BASE + 'quads/lever-leg-extension.gif',
+    name: 'Extension genou G assis',
+    muscles: 'Quadriceps gauche',
+    position: 'Assis sur une chaise, dos droit. Pied gauche au sol.',
+    mouvement: 'Tends la jambe gauche a l\'horizontale en contractant le quadriceps. Tiens 2 secondes. Redescends lentement.',
+    respiration: 'EXPIRE en tendant - INSPIRE en redescendant.',
+    erreurs: ['Mouvement rapide', 'Mal au genou (stop immediat)'],
+    conseil: 'Pour ajouter de l\'intensite plus tard : chaussette remplie de riz ou bouteille autour de la cheville.',
+    secu: 'cheville',
+    pourquoi: 'Renforce le quadriceps qui soutient le genou gauche affaibli par l\'arthrodese.'
+  },
+  bird_dog: {
+    name: 'Bird-dog (equilibre dos)',
+    muscles: 'Gainage, lombaires, fessiers, stabilisateurs',
+    position: 'A 4 pattes. Mains sous epaules, genoux sous hanches. Dos plat.',
+    mouvement: 'Tends simultanement le bras droit vers l\'avant et la jambe gauche vers l\'arriere. Reviens en controle. Alterne cote.',
+    respiration: 'EXPIRE en tendant - INSPIRE en revenant.',
+    erreurs: ['Dos qui bouge', 'Mouvement rapide', 'Perdre l\'equilibre'],
+    conseil: 'Si trop dur, commence par juste bras OU jambe separement. Combine quand tu es stable.',
+    secu: 'cheville tension',
+    pourquoi: 'Travaille l\'equilibre perdu avec l\'arthrodese. Essentiel pour eviter les chutes.'
+  },
+  cardio_velo: {
+    gif: GIF_BASE + 'cardio/stationary-bike-walk.gif',
+    name: 'Cardio velo',
+    muscles: 'Cardio-vasculaire, quadriceps, mollets',
+    position: 'Sur velo (route, VTC, appartement). Position assise confortable, legere flexion coude, pieds plats sur les pedales.',
+    mouvement: 'Pedale a intensite moderee. Tu dois pouvoir parler mais pas chanter.',
+    respiration: 'Rythmee avec le pedalage. Jamais en apnee.',
+    erreurs: ['Intensite trop haute au debut', 'Negliger l\'echauffement', 'Rouler en cote au max (tension)'],
+    conseil: 'Cible FC : 125-140 bpm. Si pas de capteur, regle-toi au ressenti : tu peux parler par phrases courtes. Zero impact cheville = ton allie.',
+    secu: 'cheville',
+    pourquoi: 'Meilleur cardio pour toi : zero impact cheville, baisse la tension durablement, brule les graisses en zone 2.'
+  },
+  natation: {
+    name: 'Natation',
+    muscles: 'Cardio-vasculaire, dos, pectoraux, jambes',
+    position: 'Dans l\'eau. Prefere le crawl ou le dos crawle. Evite la brasse qui sollicite les genoux.',
+    mouvement: 'Nage continu intensite moderee.',
+    respiration: 'Rythmee avec les mouvements. Tres important : pas d\'apnee prolongee.',
+    erreurs: ['Brasse pure (genoux)', 'Apnees longues', 'Depart trop rapide'],
+    conseil: 'Alterne crawl 2 longueurs / dos 2 longueurs. Zero impact = perfect pour toi.',
+    secu: 'cheville tension',
+    pourquoi: 'Zero impact cheville ET zero impact genou. Travail cardio complet. Excellent complement.'
+  },
+  finisseur_cardio: {
+    gif: GIF_BASE + 'cardio/stationary-bike-walk.gif',
+    name: 'Finisseur cardio velo/step',
+    muscles: 'Cardio-vasculaire',
+    position: 'Sur velo d\'appart OU step bas (marche d\'escalier) OU marche sur place.',
+    mouvement: '10 minutes d\'activite continue intensite moderee.',
+    respiration: 'Active, rythmee.',
+    erreurs: ['Intensite trop elevee (tension)', 'Sauter l\'echauffement'],
+    conseil: 'Le step doit etre BAS (10-15 cm) pour menager la cheville. Si inconfort, passe sur velo.',
+    secu: 'cheville tension',
+    pourquoi: 'Augmente la depense calorique de la seance + habitue le coeur a travailler apres effort.'
+  },
+  echauffement: {
+    name: 'Echauffement general',
+    muscles: 'Preparation globale',
+    position: 'Debout, espace libre.',
+    mouvement: 'Marche sur place 3 min, rotations epaules 1 min, rotations hanches 1 min, mobilite cou 1 min, respirations profondes 2 min.',
+    respiration: 'Profonde et calme.',
+    erreurs: ['Sauter l\'echauffement (surtout a jeun le matin)', 'Mouvements brusques'],
+    conseil: 'IMPERATIF le matin : muscles froids = risque entorse et cheville fragile x2.',
+    secu: 'cheville tension',
+    pourquoi: 'Prepare les articulations et augmente progressivement la frequence cardiaque. Prevention blessures.'
+  },
+  retour_calme: {
+    name: 'Retour au calme + etirements',
+    muscles: 'Recuperation',
+    position: 'Debout, assis ou au sol selon etirement.',
+    mouvement: 'Marche lente 5 min puis etirements : mollets 30s par cote, cuisses 30s par cote, dos 30s, epaules 30s.',
+    respiration: 'Lente et profonde.',
+    erreurs: ['Sauter cette phase (= courbatures)', 'Etirements rebonds (= blessures)'],
+    conseil: 'Etirement = tenir SANS rebondir. Tu dois sentir une tension, jamais une douleur.',
+    secu: 'cheville tension',
+    pourquoi: 'Diminue courbatures du lendemain + ameliore recuperation + baisse tension post-effort.'
+  },
+  activite_libre: {
+    name: 'Activite plein air plaisir',
+    muscles: 'Varie',
+    position: 'Exterieur libre.',
+    mouvement: 'Rando, velo balade, natation lac/mer, marche nordique. Pas de chrono, PLAISIR.',
+    respiration: 'Libre.',
+    erreurs: ['Transformer en seance performance', 'Terrain caillouteux'],
+    conseil: 'Objectif = tenir dans la duree. Le plaisir du samedi est la soupape qui permet de tenir la semaine suivante.',
+    secu: 'cheville',
+    pourquoi: 'Motivation long terme + sortie exterieure = mental au top + cardio sans y penser.'
+  }
+};
+
+// ============================================================
+// Programme (donnees)
+// ============================================================
+var PROG = {
+  get heightCm() { return state.profile ? state.profile.height : 175; },
+  get targetWeight() { return state.profile ? state.profile.target : 75; },
+  days: {
+    1: { name: 'Lundi', type: 'Haut du corps', badge: 'haut', exercises: [
+      { id: 'pompes_inclinees', sets: 4, reps: '10-12-12-15', rest: 90 },
+      { id: 'tractions_australiennes', sets: 4, reps: '8-10-10-12', rest: 90 },
+      { id: 'dips', sets: 3, reps: '8-10-10', rest: 90 },
+      { id: 'rowing_bouteilles', sets: 3, reps: '12 par bras', rest: 60 },
+      { id: 'gainage_planche', sets: 3, reps: '30s', rest: 60, isTimer: true, timerSec: 30 },
+      { id: 'superman', sets: 3, reps: '15', rest: 45 },
+      { id: 'finisseur_cardio', sets: 1, reps: '10 min', rest: 0 }
+    ]},
+    2: { name: 'Mardi', type: 'Cardio velo 1h', badge: 'cardio', exercises: [
+      { id: 'echauffement', sets: 1, reps: '10 min', rest: 0 },
+      { id: 'cardio_velo', sets: 1, reps: '40 min', rest: 0 },
+      { id: 'retour_calme', sets: 1, reps: '10 min', rest: 0 }
+    ]},
+    3: { name: 'Mercredi', type: 'Bas du corps + mollet G', badge: 'bas', exercises: [
+      { id: 'squats_mur', sets: 4, reps: '15', rest: 90 },
+      { id: 'fentes_avant', sets: 4, reps: '10 par jambe', rest: 90 },
+      { id: 'pont_fessier', sets: 4, reps: '15', rest: 60 },
+      { id: 'chaise_mur', sets: 3, reps: '40s', rest: 90, isTimer: true, timerSec: 40 },
+      { id: 'mollet_gauche', sets: 3, reps: '20', rest: 45 },
+      { id: 'coquille_g', sets: 3, reps: '15', rest: 45 },
+      { id: 'ext_genou_g', sets: 3, reps: '15', rest: 45 }
+    ]},
+    4: { name: 'Jeudi', type: 'Cardio velo ou natation', badge: 'cardio', exercises: [
+      { id: 'cardio_velo', sets: 1, reps: '45 min', rest: 0 },
+      { id: 'natation', sets: 1, reps: 'ou 45 min', rest: 0 },
+      { id: 'retour_calme', sets: 1, reps: '15 min', rest: 0 }
+    ]},
+    5: { name: 'Vendredi', type: 'Circuit complet', badge: 'complet', exercises: [
+      { id: 'echauffement', sets: 1, reps: '10 min', rest: 0 },
+      { id: 'pompes_inclinees', sets: 3, reps: '12', rest: 60 },
+      { id: 'squats_mur', sets: 3, reps: '15', rest: 60 },
+      { id: 'tractions_australiennes', sets: 3, reps: '10', rest: 60 },
+      { id: 'pont_fessier', sets: 3, reps: '15', rest: 60 },
+      { id: 'gainage_planche', sets: 3, reps: '35s', rest: 60, isTimer: true, timerSec: 35 },
+      { id: 'bird_dog', sets: 3, reps: '8 par cote', rest: 45 },
+      { id: 'finisseur_cardio', sets: 1, reps: '10 min', rest: 0 }
+    ]},
+    6: { name: 'Samedi', type: 'Rando ou velo plein air', badge: 'libre', exercises: [
+      { id: 'activite_libre', sets: 1, reps: '60-90 min', rest: 0 }
+    ]},
+    7: { name: 'Dimanche', type: 'Cardio long velo ou natation', badge: 'cardio', exercises: [
+      { id: 'echauffement', sets: 1, reps: '15 min', rest: 0 },
+      { id: 'cardio_velo', sets: 1, reps: '60 min', rest: 0 },
+      { id: 'retour_calme', sets: 1, reps: '15 min', rest: 0 }
+    ]}
+  },
+  progression: {
+    1: 'Semaine 1 - Prise en main. Respecte les reps indiques.',
+    2: 'Semaine 2 - Volume +15 pct.',
+    3: 'Semaine 3 - Volume +30 pct vs base.',
+    4: 'Semaine 4 - Volume +45 pct. Prepare decharge S5.'
+  }
+};
+
+// ============================================================
+// Etat (localStorage)
+// ============================================================
+var state = { session: {}, measures: [], history: [], week: 1, profile: null };
+try {
+  state.session = JSON.parse(localStorage.getItem('fitmat_session') || '{}');
+  state.measures = JSON.parse(localStorage.getItem('fitmat_measures') || '[]');
+  state.history = JSON.parse(localStorage.getItem('fitmat_history') || '[]');
+  state.week = parseInt(localStorage.getItem('fitmat_week') || '1');
+  state.profile = JSON.parse(localStorage.getItem('fitmat_profile') || 'null');
+} catch(e) { showError(e); }
+
+function save() {
+  try {
+    localStorage.setItem('fitmat_session', JSON.stringify(state.session));
+    localStorage.setItem('fitmat_measures', JSON.stringify(state.measures));
+    localStorage.setItem('fitmat_history', JSON.stringify(state.history));
+    localStorage.setItem('fitmat_week', String(state.week));
+    if (state.profile) localStorage.setItem('fitmat_profile', JSON.stringify(state.profile));
+  } catch(e) { showError(e); }
+}
+
+// ============================================================
+// Profil utilisateur
+// ============================================================
+function openProfileModal(isFirstTime) {
+  var p = state.profile || {};
+  document.getElementById('p-name').value = p.name || '';
+  document.getElementById('p-age').value = p.age || '';
+  document.getElementById('p-height').value = p.height || '';
+  document.getElementById('p-weight').value = p.weight || '';
+  document.getElementById('p-target').value = p.target || '';
+  document.getElementById('p-tension').checked = !!p.tension;
+  document.getElementById('p-arthrodese').checked = !!p.arthrodese;
+  document.getElementById('p-arthrodese-side').value = p.arthrodeseSide || 'gauche';
+  document.getElementById('p-arthrodese-side-wrap').style.display = p.arthrodese ? 'block' : 'none';
+  document.getElementById('profile-title').textContent = isFirstTime ? 'Bienvenue sur FitMat' : 'Mon profil';
+  document.getElementById('btn-profile-cancel').style.display = isFirstTime ? 'none' : 'block';
+  document.getElementById('modal-profile').classList.add('active');
+}
+
+document.getElementById('p-arthrodese').addEventListener('change', function(e) {
+  document.getElementById('p-arthrodese-side-wrap').style.display = e.target.checked ? 'block' : 'none';
+});
+
+document.getElementById('btn-profile-save').addEventListener('click', function() {
+  var age = parseInt(document.getElementById('p-age').value);
+  var height = parseInt(document.getElementById('p-height').value);
+  var weight = parseFloat(document.getElementById('p-weight').value);
+  var target = parseFloat(document.getElementById('p-target').value);
+  if (!age || !height || !weight) { alert('Age, taille et poids obligatoires.'); return; }
+  if (!target) {
+    target = Math.round(25 * (height/100) * (height/100) * 10) / 10;
+  }
+  state.profile = {
+    name: document.getElementById('p-name').value.trim(),
+    age: age,
+    height: height,
+    weight: weight,
+    target: target,
+    tension: document.getElementById('p-tension').checked,
+    arthrodese: document.getElementById('p-arthrodese').checked,
+    arthrodeseSide: document.getElementById('p-arthrodese-side').value
+  };
+  save();
+  document.getElementById('modal-profile').classList.remove('active');
+  updateHeader();
+  renderToday();
+  renderStats();
+});
+
+document.getElementById('btn-profile-cancel').addEventListener('click', function() {
+  document.getElementById('modal-profile').classList.remove('active');
+});
+
+function updateHeader() {
+  var p = state.profile;
+  if (!p) {
+    document.getElementById('h-title').textContent = 'FitMat';
+    document.getElementById('h-subtitle').textContent = 'Appli non configuree';
+    return;
+  }
+  document.getElementById('h-title').textContent = p.name ? 'FitMat - ' + p.name : 'FitMat';
+  var parts = [p.age + ' ans', (p.height/100).toFixed(2) + 'm'];
+  if (p.arthrodese) parts.push('Arthrodese ' + (p.arthrodeseSide === 'droite' ? 'D' : 'G'));
+  if (p.tension) parts.push('Tension');
+  document.getElementById('h-subtitle').textContent = parts.join(' - ');
+}
+
+// ============================================================
+// Helpers
+// ============================================================
+function getTodayDayNum() {
+  var d = new Date().getDay();
+  return d === 0 ? 7 : d;
+}
+var selectedDay = getTodayDayNum();
+function todayKey() { return new Date().toISOString().slice(0, 10); }
+function el(tag, cls) {
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  return n;
+}
+
+// ============================================================
+// Fiche exercice
+// ============================================================
+function showFiche(exId) {
+  var ex = EX[exId];
+  if (!ex) return;
+  document.getElementById('fiche-title').textContent = ex.name;
+  var c = document.getElementById('fiche-content');
+  c.innerHTML = '';
+
+  if (ex.gif) {
+    var gifWrap = el('div');
+    gifWrap.style.cssText = 'background:#fff;border-radius:10px;padding:8px;margin-bottom:14px;text-align:center';
+    gifWrap.innerHTML = '<img src="' + ex.gif + '" alt="' + ex.name + '" style="max-width:100%;max-height:220px;border-radius:6px" onerror="this.parentNode.innerHTML=\'<p style=color:#64748b;font-size:12px;padding:20px>Demo visuelle indisponible (hors ligne)</p>\'">';
+    c.appendChild(gifWrap);
+  } else if (ex.anim && ex.anim.length >= 2) {
+    var animWrap = el('div');
+    animWrap.style.cssText = 'background:#fff;border-radius:10px;padding:8px;margin-bottom:14px;text-align:center';
+    var animId = 'anim-' + Date.now();
+    animWrap.innerHTML = '<img id="' + animId + '" src="' + ex.anim[0] + '" alt="' + ex.name + '" style="max-width:100%;max-height:220px;border-radius:6px" onerror="this.parentNode.innerHTML=\'<p style=color:#64748b;font-size:12px;padding:20px>Demo visuelle indisponible (hors ligne)</p>\'">';
+    c.appendChild(animWrap);
+    var frame = 0;
+    var animInterval = setInterval(function() {
+      var img = document.getElementById(animId);
+      if (!img || !document.getElementById('modal-fiche').classList.contains('active')) {
+        clearInterval(animInterval);
+        return;
+      }
+      frame = (frame + 1) % ex.anim.length;
+      img.src = ex.anim[frame];
+    }, 900);
+  }
+
+  var sections = [
+    { h: 'Muscles travailles', body: '<p>' + ex.muscles + '</p>' },
+    { h: 'Position de depart', body: '<p>' + ex.position + '</p>' },
+    { h: 'Mouvement', body: '<p>' + ex.mouvement + '</p>' },
+    { h: 'Respiration', body: '<p><strong>' + ex.respiration + '</strong></p>' },
+    { h: 'Erreurs a eviter', body: '<ul>' + ex.erreurs.map(function(x) { return '<li class="label-ko">' + x + '</li>'; }).join('') + '</ul>' },
+    { h: 'Conseil', body: '<p>' + ex.conseil + '</p>' },
+    { h: 'Pourquoi cet exercice', body: '<p>' + ex.pourquoi + '</p>' }
+  ];
+
+  for (var i = 0; i < sections.length; i++) {
+    var div = el('div', 'fiche-section');
+    div.innerHTML = '<h3>' + sections[i].h + '</h3>' + sections[i].body;
+    c.appendChild(div);
+  }
+
+  if (ex.secu) {
+    var secuDiv = el('div', 'fiche-section');
+    var badges = '';
+    if (ex.secu.indexOf('cheville') !== -1) badges += '<span class="badge-secu cheville">OK cheville arthrodesee</span>';
+    if (ex.secu.indexOf('tension') !== -1) badges += '<span class="badge-secu tension">Attention tension</span>';
+    secuDiv.innerHTML = '<h3>Securite</h3>' + badges;
+    c.appendChild(secuDiv);
+  }
+
+  document.getElementById('modal-fiche').classList.add('active');
+}
+
+document.getElementById('btn-fiche-close').addEventListener('click', function() {
+  document.getElementById('modal-fiche').classList.remove('active');
+});
+
+// ============================================================
+// Render Aujourd'hui
+// ============================================================
+function renderToday() {
+  var num = selectedDay;
+  var realToday = getTodayDayNum();
+  var day = PROG.days[num];
+
+  var selBtns = document.querySelectorAll('#day-selector button');
+  for (var si = 0; si < selBtns.length; si++) {
+    var dn = parseInt(selBtns[si].dataset.day);
+    var isSel = dn === num;
+    var isTod = dn === realToday;
+    selBtns[si].style.background = isSel ? 'var(--primary)' : (isTod ? 'var(--bg-3)' : 'var(--bg-2)');
+    selBtns[si].style.borderColor = isSel ? 'var(--primary)' : (isTod ? 'var(--primary)' : 'var(--border)');
+    selBtns[si].style.color = isSel ? 'white' : 'var(--text)';
+  }
+
+  var weekBtnsToday = document.querySelectorAll('#week-selector-today button');
+  for (var wi = 0; wi < weekBtnsToday.length; wi++) {
+    var wn = parseInt(weekBtnsToday[wi].dataset.week);
+    var isSelW = wn === state.week;
+    weekBtnsToday[wi].style.background = isSelW ? 'var(--primary)' : 'var(--bg-2)';
+    weekBtnsToday[wi].style.borderColor = isSelW ? 'var(--primary)' : 'var(--border)';
+    weekBtnsToday[wi].style.color = isSelW ? 'white' : 'var(--text)';
+  }
+
+  if (num === realToday) {
+    var dateStr = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    document.getElementById('today-date').textContent = 'Aujourd hui - ' + dateStr;
+  } else {
+    document.getElementById('today-date').textContent = 'Seance de ' + day.name.toLowerCase();
+  }
+  document.getElementById('today-type').textContent = day.name + ' - ' + day.type;
+
+  var key = num === realToday ? todayKey() : 'preview-' + num;
+  if (!state.session[key]) state.session[key] = {};
+  var sess = state.session[key];
+  var container = document.getElementById('today-exercises');
+  container.innerHTML = '';
+
+  for (var i = 0; i < day.exercises.length; i++) {
+    (function(idx) {
+      var exEntry = day.exercises[idx];
+      var ex = EX[exEntry.id];
+      if (!ex) return;
+      var done = !!sess[idx];
+      var div = el('div', 'exercise' + (done ? ' done' : ''));
+
+      var check = el('div', 'exercise-check');
+      check.textContent = done ? '✓' : '';
+      check.addEventListener('click', function() {
+        sess[idx] = !sess[idx];
+        save();
+        renderToday();
+      });
+
+      var info = el('div');
+      info.style.flex = '1';
+      info.style.minWidth = '0';
+      var nameDiv = el('div', 'exercise-name');
+      nameDiv.textContent = ex.name;
+      var setsDiv = el('div', 'exercise-sets');
+      var setsTxt = exEntry.sets > 1 ? (exEntry.sets + ' x ' + exEntry.reps) : exEntry.reps;
+      var restTxt = exEntry.rest > 0 ? ' - Recup ' + exEntry.rest + 's' : '';
+      setsDiv.textContent = setsTxt + restTxt;
+      info.appendChild(nameDiv);
+      info.appendChild(setsDiv);
+
+      var infoBtn = el('button', 'exercise-info');
+      infoBtn.textContent = 'i';
+      infoBtn.addEventListener('click', function() { showFiche(exEntry.id); });
+
+      div.appendChild(check);
+      div.appendChild(info);
+      div.appendChild(infoBtn);
+
+      if (exEntry.rest > 0) {
+        var btn = el('button', 'exercise-timer');
+        btn.textContent = exEntry.rest + 's';
+        btn.addEventListener('click', function() { startTimer(exEntry.rest, 'Recup'); });
+        div.appendChild(btn);
+      }
+      if (exEntry.isTimer) {
+        var btn2 = el('button', 'exercise-timer');
+        btn2.textContent = 'Go';
+        btn2.addEventListener('click', function() { startTimer(exEntry.timerSec, ex.name); });
+        div.appendChild(btn2);
+      }
+
+      container.appendChild(div);
+    })(i);
+  }
+
+  var done = 0;
+  for (var k in sess) if (sess[k]) done++;
+  var total = day.exercises.length;
+  document.getElementById('today-progress').style.width = (total > 0 ? (done / total) * 100 : 0) + '%';
+  document.getElementById('today-progress-text').textContent = done + ' / ' + total + ' exercices faits';
+}
+
+document.getElementById('btn-finish-session').addEventListener('click', function() {
+  try {
+    var num = selectedDay;
+    var realToday = getTodayDayNum();
+    var key = num === realToday ? todayKey() : 'preview-' + num;
+    var sess = state.session[key] || {};
+    var done = 0;
+    for (var k in sess) if (sess[k]) done++;
+    var day = PROG.days[num];
+    if (done === 0) { alert('Coche au moins un exercice avant de valider.'); return; }
+    state.history.unshift({ date: todayKey(), dayName: day.name, type: day.type, completed: done, total: day.exercises.length, week: state.week });
+    save();
+    alert('Seance validee. Bien joue !');
+    renderHistory();
+    renderStats();
+  } catch(e) { showError(e); }
+});
+
+document.getElementById('btn-reset-session').addEventListener('click', function() {
+  if (!confirm('Reinitialiser la seance affichee ?')) return;
+  var num = selectedDay;
+  var realToday = getTodayDayNum();
+  var key = num === realToday ? todayKey() : 'preview-' + num;
+  state.session[key] = {};
+  save();
+  renderToday();
+});
+
+// Day selector listeners
+(function attachDaySelector() {
+  var btns = document.querySelectorAll('#day-selector button');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener('click', function(e) {
+      selectedDay = parseInt(e.currentTarget.dataset.day);
+      renderToday();
+    });
+  }
+})();
+
+// Week selector in Today tab (S1-S4)
+(function attachWeekToday() {
+  var btns = document.querySelectorAll('#week-selector-today button');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener('click', function(e) {
+      state.week = parseInt(e.currentTarget.dataset.week);
+      save();
+      renderToday();
+    });
+  }
+})();
+
+// ============================================================
+// Timer
+// ============================================================
+var timerInterval = null;
+function startTimer(seconds, title) {
+  var modal = document.getElementById('modal-timer');
+  var display = document.getElementById('timer-display');
+  document.getElementById('timer-title').textContent = title;
+  var remaining = seconds;
+  display.textContent = remaining;
+  modal.classList.add('active');
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(function() {
+    remaining--;
+    display.textContent = remaining;
+    if (remaining <= 0) {
+      clearInterval(timerInterval);
+      display.textContent = 'OK';
+      try {
+        var ctx = new (window.AudioContext || window.webkitAudioContext)();
+        var osc = ctx.createOscillator();
+        osc.frequency.value = 880;
+        osc.connect(ctx.destination);
+        osc.start();
+        setTimeout(function() { osc.stop(); }, 300);
+      } catch(e) {}
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    }
+  }, 1000);
+}
+document.getElementById('btn-timer-stop').addEventListener('click', function() {
+  if (timerInterval) clearInterval(timerInterval);
+  document.getElementById('modal-timer').classList.remove('active');
+});
+
+// ============================================================
+// Programme
+// ============================================================
+function renderProgram() {
+  var todayNum = getTodayDayNum();
+  var container = document.getElementById('program-days');
+  container.innerHTML = '';
+  document.getElementById('week-info').textContent = PROG.progression[state.week];
+
+  var btns = document.querySelectorAll('.week-selector button');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList.toggle('active', parseInt(btns[i].dataset.week) === state.week);
+  }
+
+  for (var d = 1; d <= 7; d++) {
+    (function(num) {
+      var day = PROG.days[num];
+      var div = el('div', 'week-day' + (num === todayNum ? ' today' : ''));
+      var left = el('div');
+      var nameEl = el('div', 'week-day-name');
+      nameEl.textContent = day.name + (num === todayNum ? ' - Aujourd hui' : '');
+      var typeEl = el('div', 'week-day-type');
+      typeEl.textContent = day.type;
+      left.appendChild(nameEl);
+      left.appendChild(typeEl);
+      var badge = el('span', 'week-day-badge badge-' + day.badge);
+      badge.textContent = day.badge;
+      div.appendChild(left);
+      div.appendChild(badge);
+      div.addEventListener('click', function() { showDetail(num); });
+      container.appendChild(div);
+    })(d);
+  }
+}
+
+function showDetail(dayNum) {
+  var day = PROG.days[dayNum];
+  document.getElementById('detail-title').textContent = day.name + ' - ' + day.type;
+  var c = document.getElementById('detail-content');
+  c.innerHTML = '';
+  for (var i = 0; i < day.exercises.length; i++) {
+    (function(exEntry) {
+      var ex = EX[exEntry.id];
+      if (!ex) return;
+      var div = el('div', 'detail-exercise');
+      var left = el('div');
+      left.style.flex = '1';
+      var nameEl = el('div', 'detail-exercise-name');
+      nameEl.textContent = ex.name;
+      var detailEl = el('div', 'detail-exercise-detail');
+      var setsTxt = exEntry.sets > 1 ? (exEntry.sets + ' series x ' + exEntry.reps) : exEntry.reps;
+      detailEl.textContent = setsTxt + (exEntry.rest > 0 ? ' - Recup ' + exEntry.rest + 's' : '');
+      left.appendChild(nameEl);
+      left.appendChild(detailEl);
+      var chevron = el('div', 'detail-exercise-chevron');
+      chevron.textContent = 'i';
+      chevron.style.width = '28px';
+      chevron.style.height = '28px';
+      chevron.style.background = 'var(--info)';
+      chevron.style.color = 'white';
+      chevron.style.borderRadius = '50%';
+      chevron.style.display = 'flex';
+      chevron.style.alignItems = 'center';
+      chevron.style.justifyContent = 'center';
+      chevron.style.fontSize = '15px';
+      div.appendChild(left);
+      div.appendChild(chevron);
+      div.addEventListener('click', function() {
+        document.getElementById('modal-detail').classList.remove('active');
+        showFiche(exEntry.id);
+      });
+      c.appendChild(div);
+    })(day.exercises[i]);
+  }
+}
+
+document.getElementById('btn-detail-close').addEventListener('click', function() {
+  document.getElementById('modal-detail').classList.remove('active');
+});
+
+var weekBtns = document.querySelectorAll('.week-selector button');
+for (var w = 0; w < weekBtns.length; w++) {
+  weekBtns[w].addEventListener('click', function(e) {
+    state.week = parseInt(e.currentTarget.dataset.week);
+    save();
+    renderProgram();
+  });
+}
+
+// ============================================================
+// Suivi
+// ============================================================
+document.getElementById('btn-save-measure').addEventListener('click', function() {
+  try {
+    var w = parseFloat(document.getElementById('input-weight').value);
+    var waist = parseFloat(document.getElementById('input-waist').value);
+    if (!w) { alert('Saisis au moins le poids.'); return; }
+    state.measures.push({ date: todayKey(), weight: w, waist: isNaN(waist) ? null : waist });
+    save();
+    document.getElementById('input-weight').value = '';
+    document.getElementById('input-waist').value = '';
+    renderStats();
+    alert('Mesures enregistrees.');
+  } catch(e) { showError(e); }
+});
+
+function renderStats() {
+  var m = state.measures;
+  if (m.length === 0) {
+    document.getElementById('stat-weight').textContent = '-';
+    document.getElementById('stat-loss').textContent = '-';
+    document.getElementById('stat-imc').textContent = '-';
+    document.getElementById('stat-waist').textContent = '-';
+  } else {
+    var last = m[m.length - 1];
+    var first = m[0];
+    document.getElementById('stat-weight').textContent = last.weight.toFixed(1) + ' kg';
+    var loss = first.weight - last.weight;
+    document.getElementById('stat-loss').textContent = (loss >= 0 ? '-' : '+') + Math.abs(loss).toFixed(1) + ' kg';
+    var h = PROG.heightCm / 100;
+    var imc = last.weight / (h * h);
+    document.getElementById('stat-imc').textContent = imc.toFixed(1);
+    document.getElementById('stat-waist').textContent = last.waist ? last.waist + ' cm' : '-';
+  }
+  document.getElementById('stat-sessions').textContent = state.history.length;
+  drawChart();
+}
+
+function drawChart() {
+  var svg = document.getElementById('chart-weight');
+  var m = state.measures;
+  if (m.length < 2) {
+    svg.innerHTML = '<text x="200" y="80" fill="#64748b" text-anchor="middle" font-size="12">Ajoute au moins 2 mesures</text>';
+    document.getElementById('chart-info').textContent = m.length === 0 ? 'Aucune mesure' : '1 mesure';
+    return;
+  }
+  var weights = m.map(function(x) { return x.weight; });
+  var minW = Math.min.apply(null, weights) - 2;
+  var maxW = Math.max.apply(null, weights) + 2;
+  var pts = [];
+  for (var i = 0; i < m.length; i++) {
+    var px = (i / (m.length - 1)) * 390 + 5;
+    var py = 150 - ((m[i].weight - minW) / (maxW - minW)) * 140;
+    pts.push(px + ',' + py);
+  }
+  var targetY = 150 - ((PROG.targetWeight - minW) / (maxW - minW)) * 140;
+  var targetLine = (targetY >= 0 && targetY <= 160) ? '<line x1="0" y1="' + targetY + '" x2="400" y2="' + targetY + '" stroke="#22c55e" stroke-width="1" stroke-dasharray="4,4"/>' : '';
+  var circles = '';
+  for (var j = 0; j < m.length; j++) {
+    var cx = (j / (m.length - 1)) * 390 + 5;
+    var cy = 150 - ((m[j].weight - minW) / (maxW - minW)) * 140;
+    circles += '<circle cx="' + cx + '" cy="' + cy + '" r="4" fill="#f97316"/>';
+  }
+  svg.innerHTML = targetLine + '<polyline points="' + pts.join(' ') + '" fill="none" stroke="#f97316" stroke-width="2.5"/>' + circles;
+  document.getElementById('chart-info').textContent = m.length + ' mesures - ligne verte = objectif ' + PROG.targetWeight + ' kg';
+}
+
+// ============================================================
+// Historique
+// ============================================================
+function renderHistory() {
+  var list = document.getElementById('history-list');
+  list.innerHTML = '';
+  document.getElementById('hist-total').textContent = state.history.length;
+
+  var now = new Date();
+  var weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay() + 1);
+  weekStart.setHours(0, 0, 0, 0);
+  var thisWeek = 0;
+  for (var i = 0; i < state.history.length; i++) {
+    if (new Date(state.history[i].date) >= weekStart) thisWeek++;
+  }
+  document.getElementById('hist-week').textContent = thisWeek;
+
+  var sortedDates = state.history.map(function(h) { return h.date; }).sort().reverse();
+  var dates = {};
+  for (var d = 0; d < sortedDates.length; d++) dates[sortedDates[d]] = true;
+  var streak = 0;
+  var check = new Date();
+  while (true) {
+    var key = check.toISOString().slice(0, 10);
+    if (dates[key]) { streak++; check.setDate(check.getDate() - 1); }
+    else break;
+  }
+  document.getElementById('hist-streak').textContent = streak;
+
+  if (state.history.length === 0) {
+    list.innerHTML = '<div class="card" style="text-align:center;color:var(--muted)">Aucune seance. Valide ta premiere !</div>';
+    return;
+  }
+
+  for (var h = 0; h < state.history.length; h++) {
+    var item = state.history[h];
+    var dateObj = new Date(item.date);
+    var dateStr = dateObj.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+    var div = el('div', 'history-item');
+    div.innerHTML = '<div class="history-date">' + dateStr + ' - S' + item.week + '</div><div class="history-type">' + item.dayName + ' - ' + item.type + '</div><div style="font-size:12px;color:var(--muted);margin-top:4px">' + item.completed + ' / ' + item.total + ' exercices</div>';
+    list.appendChild(div);
+  }
+}
+
+// ============================================================
+// Init
+// ============================================================
+updateHeader();
+if (!state.profile) {
+  openProfileModal(true);
+}
+try { renderToday(); } catch(e) { showError(e); }
+</script>
+
+</body>
+</html>
