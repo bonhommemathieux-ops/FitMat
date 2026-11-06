@@ -30,3 +30,4 @@ PWA (Progressive Web App) de suivi sport personnel.
 - localStorage pour la persistance
 - GIFs d'exercices depuis Exercise Gym GIFs DB (via jsDelivr CDN)
 - Images de secours depuis free-exercise-db (yuhonas)
+
